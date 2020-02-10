@@ -1,23 +1,52 @@
 #!/bin/sh
+#$ -S /bin/sh
 #$ -l s_vmem=100G
 #$ -l mem_req=100G
 #-pe def_slot 4
 
 <<COMMENT
-export PATH=/path/to/spaceranger-1.0.0:$PATH
-spaceranger count --id=id_name \
-									--transcriptome=/path/to/refdata/ \
-									--fastqs=/path/to/fastq \
-									--image=/path/to/.tif \
-									--slide=slide_id \
-									--area=area_id \
-"""
+usage:
+      qsub -l os7 -cwd spatialcount.sh -i ID_NAME -r REFERENCE \
+      -f FASTQS -t TIF -s SLIDE_ID -a AREAD_ID
+
+options:
+      -i ... id name
+      -r ... reference (GRCh38 or mm10)
+      -f ... path to fastqs
+      -t ... path to tif
+      -s ... slide id
+      -a ... aread id
+
+description:
+      analysis of fastqs by spaceranger
 COMMENT
 
+while getopts i:r:f:t:s:a: OPT;do
+  case $OPT in
+    i )ID=$OPTARG #id name
+      ;;
+    r )REF=$OPTARG #path to reference
+      ;;
+    f )FASTQS=$OPTARG #path to fastqs
+      ;;
+    t )TIF=$OPTARG #path to tif
+      ;;
+    s )SLIDE=$OPTARG #slide id
+      ;;
+    a )AREA=$OPTARG #area id
+      ;;
+    *?)usage
+      ;;
+	esac
+done
+
 export PATH=~/visium/tools/spaceranger-1.0.0:$PATH
-spaceranger count --id=Mouse_Kidney_No4 \
-									--transcriptome=~/visium/reference/refdata-cellranger-mm10-3.0.0/ \
-									--fastqs=~/visium/data/fastq/200124_mouse_kidney/ \
-									--image=~/visium/data/fig/20200124124703-4-1.tif \
-									--slide=V19T12-008 \
-									--area=D1
+spaceranger count --id=${ID} \
+                  --transcriptome=${REF} \
+                  --fastqs=${FASTQS} \
+                  --image=${TIF} \
+                  --slide=${SLIDE} \
+                  --area=${AREA}
+
+mv ${ID} ~/visium/output/
+
